@@ -1,12 +1,14 @@
 package com.carrentalsystem.security;
 
 import io.jsonwebtoken.*;
+import io.jsonwebtoken.io.Decoders;
 import io.jsonwebtoken.security.Keys;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
 import jakarta.annotation.PostConstruct;
 import java.security.Key;
+import java.util.Base64;
 import java.util.Date;
 
 @Component
@@ -19,7 +21,9 @@ public class JwtUtil {
 
     @PostConstruct
     public void init() {
-        this.key = Keys.hmacShaKeyFor(SECRET.getBytes());
+        // Base64-encode the secret so it always meets the 256-bit minimum requirement
+        String base64Secret = Base64.getEncoder().encodeToString(SECRET.getBytes());
+        this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(base64Secret));
     }
 
     // Generate Token
