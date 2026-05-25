@@ -1,6 +1,7 @@
 package com.carrentalsystem.configuartion;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -24,6 +25,9 @@ public class SecurityConfig {
     @Autowired
     private CorsConfigurationSource corsConfigurationSource;
 
+    @Value("${frontend.url:http://localhost:5173}")
+    private String frontendUrl;
+
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
 
@@ -37,11 +41,13 @@ public class SecurityConfig {
                     "/oauth2/**",
                     "/login/**",
                     "/cars/**",
-                    "/admin/cars/**",
                     "/v3/api-docs/**",
                     "/swagger-ui/**",
                     "/swagger-ui.html"
                 ).permitAll()
+
+                .requestMatchers("/admin/cars/**")
+                .hasRole("ADMIN")
 
                 .requestMatchers("/bookings/create/**")
                 .hasAnyRole("USER", "ADMIN")
@@ -53,7 +59,7 @@ public class SecurityConfig {
                 .hasRole("ADMIN")
 
                 .anyRequest()
-                .permitAll()
+                .authenticated()
             )
 
             .sessionManagement(session ->
@@ -62,7 +68,7 @@ public class SecurityConfig {
 
             .oauth2Login(oauth -> oauth
                 .successHandler((request, response, authentication) -> {
-                    response.sendRedirect("http://localhost:5173/cars");
+                    response.sendRedirect(frontendUrl + "/cars");
                 })
             );
 
@@ -78,4 +84,4 @@ public class SecurityConfig {
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
-}
+}
